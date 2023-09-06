@@ -3,7 +3,7 @@ const { request: req, response: res } = require('express')
 const usersGet = (req, res) => {
     //?ejemplo cuando ../api/users?q=hola&nombre=gino&apikey=123
     //?const params = req.query sin desestructuracion
-    const { q, nombre } = req.query
+    const { q, nombre,apikey } = req.query
     res.json({
         statuscode: 200,
         message: 'hola mundo con JSON (get controller)',
