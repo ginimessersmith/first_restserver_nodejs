@@ -1,9 +1,11 @@
 const { request: req, response: res } = require('express')
+const bcyrpt = require('bcryptjs')
+const User = require('../models/user.model')
 
 const usersGet = (req, res) => {
     //?ejemplo cuando ../api/users?q=hola&nombre=gino&apikey=123
     //?const params = req.query sin desestructuracion
-    const { q, nombre,apikey } = req.query
+    const { q, nombre, apikey } = req.query
     res.json({
         statuscode: 200,
         message: 'hola mundo con JSON (get controller)',
@@ -28,15 +30,45 @@ const usersGet = (req, res) => {
 }
 
 
-const usersPost = (req, res) => {
-    const body = req.body//?body desde la peticion
-    res.json({
-        statuscode: 200,
-        message: 'hola mundo con JSON (post controller)',
-        //?mostrando el body:
-        body
-    })
-    console.log('ruta (post)/api lanzada con exito')
+const usersPost = async (req, res) => {
+    try {
+        const body = req.body//?body desde la peticion
+        const{nombre,correo, password, rol}=body
+        const user = new User({nombre,correo,password,rol})
+
+        
+        //?pasos a seguir:
+       //! verificar si el parametro correo es un email
+        //! verificar si el correo existe
+        const existeEmail=await User.findOne({correo})
+
+        if(existeEmail){
+            return res.status(400).json({
+                error:'ese correro ya existe'
+            })
+        }
+        //! encriptar la contraseña
+        const salt = bcyrpt.genSaltSync()//?cuantas vueltas para la encriptacion
+        //?hacer el hash de la contraseña:
+        user.password=bcyrpt.hashSync(password,salt)
+        //!guardar en la base de datos
+        await user.save()
+        res.json({
+            statuscode: 200,
+            message: 'hola mundo con JSON (post controller)',
+            //?mostrando el body:
+            user
+        })
+        console.log('ruta (post)/api lanzada con exito')
+    } catch (error) {
+        res.json({
+            statuscode: 500,
+            message: 'problemas con la base de datos, controlador user metod post o internal server',
+            //?mostrando el body:
+            error
+        })
+    }
+
 }
 
 

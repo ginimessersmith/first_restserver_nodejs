@@ -1,20 +1,28 @@
 const express = require('express')
+const bcyrpt = require('bcryptjs')
 require('dotenv').config()
-const cors=require('cors')
+const cors = require('cors')
+const { dbConnection } = require('../database/config.db')
 
 class Server {
     constructor() {
         this.app = express()
         this.port = process.env.PORT
-        this.usuersRoutePath='/api/users'
-        //middlewares
-        
+        this.usuersRoutePath = '/api/users'
+        //?conectar a la db
+        this.dbConnect()
+        //?middlewares
+
         this.middleware()
         this.router()
     }
 
+    async dbConnect() {
+        await dbConnection()
+    }
+
     router() {
-        this.app.use(this.usuersRoutePath,require('../routes/user.routes'))
+        this.app.use(this.usuersRoutePath, require('../routes/user.routes'))
     }
 
     listen() {
