@@ -1,17 +1,33 @@
 const { request: req, response: res } = require('express')
 const bcyrpt = require('bcryptjs')
 const User = require('../models/user.model')
+const { esEmailValido } = require('../helpers/db-validators')
 
-const usersGet = (req, res) => {
+const usersGet = async (req, res) => {
     //?ejemplo cuando ../api/users?q=hola&nombre=gino&apikey=123
     //?const params = req.query sin desestructuracion
-    const { q, nombre, apikey } = req.query
+    //?const { q, nombre, apikey } = req.query
+    const { limite = 5, desde = 0 } = req.query
+
+    //!! const usuarios = await User.find({ estado: true })//?se muestra todos los usuarios pero con la condicion({estado:true})
+    //     .limit(Number(limite))
+    //     .skip(Number(desde))
+
+    //!! const totalUsuarios = await User.countDocuments({ estado: true })//?se cuenta todos los usuarios pero con la condicion({estado:true})
+    //*desestructuracion de arreglos
+    const [usuarios, totalUsuarios] = await Promise.all([
+        User.find({ estado: true })
+            .limit(Number(limite))
+            .skip(Number(desde)),
+        User.countDocuments({ estado: true })
+    ])
+
     res.json({
-        statuscode: 200,
-        message: 'hola mundo con JSON (get controller)',
-        q,
-        nombre,
+        totalUsuarios,
+        usuarios
     })
+
+
     //resultado sin desestructuracion: {"statuscode": 200,
     // "message": "hola mundo con JSON (get controller)",
     // "params": {
@@ -33,24 +49,19 @@ const usersGet = (req, res) => {
 const usersPost = async (req, res) => {
     try {
         const body = req.body//?body desde la peticion
-        const{nombre,correo, password, rol}=body
-        const user = new User({nombre,correo,password,rol})
+        const { nombre, correo, password, rol } = body
+        const user = new User({ nombre, correo, password, rol })
 
-        
+
         //?pasos a seguir:
-       //! verificar si el parametro correo es un email
+        //! verificar si el parametro correo es un email
         //! verificar si el correo existe
-        const existeEmail=await User.findOne({correo})
-
-        if(existeEmail){
-            return res.status(400).json({
-                error:'ese correro ya existe'
-            })
-        }
+        //esEmailValido(correo)
+        //?la validacion se encuentra en la ruta: check('correo', 'el correo no es valido').custom((correo)=>esEmailValido(correo)),
         //! encriptar la contraseña
         const salt = bcyrpt.genSaltSync()//?cuantas vueltas para la encriptacion
         //?hacer el hash de la contraseña:
-        user.password=bcyrpt.hashSync(password,salt)
+        user.password = bcyrpt.hashSync(password, salt)
         //!guardar en la base de datos
         await user.save()
         res.json({
@@ -72,13 +83,21 @@ const usersPost = async (req, res) => {
 }
 
 
-const usersPut = (req, res) => {
+const usersPut = async (req, res) => {
     //const id=req.params.id//?optener el valor 20 desde ../api/users/20; otra forma:
     const { id } = req.params//?desestruturando
+    const { _id, password, google, correo, ...restoBody } = req.body//?desestructurando lo que no necesito que no se grabe o lo que se va actualizar
+    if (password) {//?si viene el password significa q el user quiere actualizar el password
+        const salt = bcyrpt.genSaltSync()
+        //?crear un nuevo hash
+        restoBody.password = bcyrpt.hashSync(password, salt)
+    }
+    const usuario = await User.findByIdAndUpdate(id, restoBody)
     res.json({
         statuscode: 200,
         message: 'hola mundo con JSON (put controller)',
-        id
+        id,
+        usuario
     })
     // resultado:{
     //     "statuscode": 200,
@@ -96,10 +115,14 @@ const usersPatch = (req, res) => {
     console.log('ruta (put)/api lanzada con exito')
 }
 
-const usersDelete = (req, res) => {
+const usersDelete = async(req, res) => {
+    const { id } = req.params
+    //?const usuario = await User.findByIdAndDelete(id) no recomendado
+    const usuario = await User.findByIdAndUpdate(id,{estado:false})
     res.json({
         statuscode: 200,
-        message: 'hola mundo con JSON (delete controller)'
+        message: 'hola mundo con JSON (delete controller)',
+        usuario
     })
     console.log('ruta (delete)/api lanzada con exito')
 }

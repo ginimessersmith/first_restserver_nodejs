@@ -6,7 +6,7 @@ const { usersGet,
     usersPatch } = require('../controllers/user.controller')
 const { check } = require('express-validator')
 const { validarCampos } = require('../middlewares/validarCampos.middlewares.js')
-const { esRolValido } = require('../helpers/db-validators')
+const { esRolValido, esEmailValido, existeId } = require('../helpers/db-validators')
 
 
 const router = Router()
@@ -14,7 +14,7 @@ const router = Router()
 router.get('/', usersGet)
 
 router.post('/', [
-    check('correo', 'el correo no es valido').isEmail(),
+    check('correo', 'el correo no es valido').custom((correo)=>esEmailValido(correo)),
     //?check('rol', 'el rol no es valido').isIn(['ADMIN_ROLE', 'SUPER_USER_ROLE']),
     check('password', 'la contraseña es obligatoria y minimo 6 caracteres').notEmpty().isLength({ min: 6 }),
     check('nombre', 'el nombre es obligatorio').notEmpty(),
@@ -23,9 +23,14 @@ router.post('/', [
     validarCampos
 ], usersPost)//?el arreglo del centro van todos los middlewares
 
-router.put('/:id', usersPut)
+router.put('/:id',[
+    check('id','el id no es valido').isMongoId(),
+    check('id').custom(existeId),
+    check('rol').custom((rol)=>esRolValido(rol)),
+    validarCampos
+], usersPut)
 router.patch('/', usersPatch)
 
-router.delete('/', usersDelete)
+router.delete('/:id', usersDelete)
 
 module.exports = router
