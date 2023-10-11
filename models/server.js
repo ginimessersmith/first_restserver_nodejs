@@ -3,13 +3,12 @@ const bcyrpt = require('bcryptjs')
 require('dotenv').config()
 const cors = require('cors')
 const { dbConnection } = require('../database/config.db')
+const paths = require('../paths/paths')
 
 class Server {
     constructor() {
         this.app = express()
         this.port = process.env.PORT
-        this.usersRoutePath = '/api/users'
-        this.authRoutePath = '/api/auth'
         //?conectar a la db
         this.dbConnect()
         //?middlewares
@@ -23,8 +22,12 @@ class Server {
     }
 
     router() {
-        this.app.use(this.authRoutePath, require('../routes/auth.routes'))
-        this.app.use(this.usersRoutePath, require('../routes/user.routes'))
+        this.app.use(paths.auth, require('../routes/auth.routes'))
+        this.app.use(paths.buscar,require('../routes/buscar.routes'))
+        this.app.use(paths.categoria,require('../routes/categoria.routes'))
+        this.app.use(paths.producto,require('../routes/productos.routes'))
+        this.app.use(paths.users, require('../routes/user.routes'))
+
     }
 
     listen() {

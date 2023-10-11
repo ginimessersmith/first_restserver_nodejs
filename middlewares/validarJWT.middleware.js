@@ -29,9 +29,9 @@ const validarJWT = async (req, res, next) => {
         //?console.log(usuarioAutenticado)
         next()
     } catch (error) {
-        console.log(error)
         return res.status(401).json({
-            mensaje: 'Usuario no autorizado, token no valido'
+            mensaje: 'Usuario no autorizado, token no valido',
+            error
         })
     }
 

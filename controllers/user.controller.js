@@ -1,7 +1,7 @@
 const { request: req, response: res } = require('express')
 const bcrypt = require('bcryptjs')
 const User = require('../models/user.model')
-const { esEmailValido } = require('../helpers/db-validators')
+//const { esEmailValido } = require('../helpers/db-validators')
 const { generarJWT } = require('../helpers/generate-jwt')
 
 const usersGet = async (req, res) => {
@@ -46,33 +46,58 @@ const usersGet = async (req, res) => {
     console.log('ruta (get)/api lanzada con exito')
 }
 
+const usersGetId = async (req, res) => {
+
+    const {id}=req.params
+
+    const usuario=await User.findById(id)
+
+    if(usuario){
+        res.json({
+            usuario
+        })
+    }else{
+        res.json({
+            mensaje:'no se encontro el usuario'
+        })
+    }
+
+}
 
 const usersPost = async (req, res) => {
     try {
         const body = req.body//?body desde la peticion
-        const { nombre, correo, password, rol } = body
+        const { nombre, correo, password, confirmpassword, rol } = body
         const user = new User({ nombre, correo, password, rol })
 
 
         //?pasos a seguir:
-        //! verificar si el parametro correo es un email
+        //! verificar si el parametro correo es un email (verificado en el middleware)
         //! verificar si el correo existe
         //esEmailValido(correo)
         //?la validacion se encuentra en la ruta: check('correo', 'el correo no es valido').custom((correo)=>esEmailValido(correo)),
-        //! encriptar la contraseña
-        const salt = bcrypt.genSaltSync()//?cuantas vueltas para la encriptacion
-        //?hacer el hash de la contraseña:
-        user.password = bcrypt.hashSync(password, salt)
-        const token = await generarJWT(user.id)
-        //!guardar en la base de datos
-        await user.save()
-        res.json({
-            statuscode: 200,
-            message: 'hola mundo con JSON (post controller)',
-            //?mostrando el body:
-            user,
-            token
-        })
+        if (password == confirmpassword) {
+            //! encriptar la contraseña
+            const salt = bcrypt.genSaltSync()//?cuantas vueltas para la encriptacion
+            //?hacer el hash de la contraseña:
+            user.password = bcrypt.hashSync(password, salt)
+            const token = await generarJWT(user.id)
+            //!guardar en la base de datos
+            await user.save()
+            res.json({
+                statuscode: 200,
+                message: 'hola mundo con JSON (post controller)',
+                //?mostrando el body:
+                user,
+                token
+            })
+        } else {
+            return res.status(401).json({
+                statuscode: 401,
+                message: 'hola mundo con JSON (post controller)/ no se confirmo las contraseñas',
+            })
+        }
+
         console.log('ruta (post)/api lanzada con exito')
     } catch (error) {
         res.json({
@@ -120,7 +145,7 @@ const usersPatch = (req, res) => {
 
 const usersDelete = async (req, res) => {
     const { id } = req.params
-   //? const usuarioAutenticado = req.usuarioAutenticado, para ver si el usuario autenticado
+    //? const usuarioAutenticado = req.usuarioAutenticado, para ver si el usuario autenticado
     //?const usuario = await User.findByIdAndDelete(id) no recomendado
     const usuarioEliminado = await User.findByIdAndUpdate(id, { estado: false })
     res.json({
@@ -133,6 +158,7 @@ const usersDelete = async (req, res) => {
 }
 module.exports = {
     usersGet,
+    usersGetId,
     usersDelete,
     usersPost,
     usersPut,

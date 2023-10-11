@@ -1,6 +1,7 @@
 const { Router } = require('express')
 
 const { usersGet,
+    usersGetId,
     usersPost,
     usersPut,
     usersDelete,
@@ -13,7 +14,7 @@ const {
     tieneRol,
     validarCampos,
     validarJWT
-} = require('../middlewares/exportaciones.middleware')
+} = require('../middlewares/exportsMiddleware')
 
 const { esRolValido,
     esEmailValido,
@@ -23,6 +24,12 @@ const { esRolValido,
 const router = Router()
 //! ejecutar la funcion: userGet(), ejecutar por referencia: userGet
 router.get('/', usersGet)
+
+router.get('/:id', [
+    validarJWT,
+    check('id', 'el id no es valido').isMongoId(),
+    check('id').custom(existeId),
+],  usersGetId)
 
 router.post('/', [
     check('correo', 'el correo no es valido').custom((correo) => esEmailValido(correo)),
