@@ -1,9 +1,10 @@
 const paths = {
-    users : '/api/users',
     auth : '/api/auth',
+    buscar:'/api/buscar',
     categoria : '/api/categoria',
     producto : '/api/producto',
-    buscar:'/api/buscar'
+    upload:'/api/upload',
+    users : '/api/users',
 }
 
 module.exports = paths

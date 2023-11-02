@@ -1,0 +1,10 @@
+abrir winscp, es una conexion ftp entre pnetlab y la pc
+buscar la carpeta opt/unetlab/addons
+ir a iol/bin en ambas y seleccionar l2-team_track.bin/aparato de capa 2 switch y
+ la que no tiene l2 que es un routter
+actualizar pnetlab y ver node, deben estar los dispositivos nuevos
+hacer correr la licencia, con el comando /opt/unetlab/wrappers/unl_wrapper -a fixpermissions
+configuracion de un routter (no l2), seleccionar imagen no l2, memoria ram 256mb,save.
+agregar switch cisco l2, nombre sw, icono switch, ram 256mb, save.
+arrastrar calvija del router al switch
+para encender el router hay que darle play a ambos.
